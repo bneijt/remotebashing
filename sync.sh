@@ -17,12 +17,25 @@
 set -e
 cd "`dirname "$0"`"
 
+#The host to connect to.
+#Tip: use your sshconfig to configure the user for that host.
 REMOTE_HOST=
+
+#Configure where the jobs are placed an run, without trailing slash
+#Use "remotebashing" if you want to use the remotebashing directory in the home
+#dir of the user you login to on the remote host.
+REMOTE_BASEPATH=remotebashing
 
 if [ "x$REMOTE_HOST" = "x" ]; then
   echo "Please configure REMOTE_HOST by updating this script"
   exit 1
 fi
+
+if [ "x$REMOTE_BASEPATH" = "x" ]; then
+  echo "Please configure REMOTE_BASEPATH by updating this script"
+  exit 1
+fi
+
 
 echo "-- Uploading jobs"
 #Upload any job that still needs to run
@@ -36,18 +49,18 @@ for job in $jobs; do
       mayNeedToUploadRunner=true
       chmod a+x "$jobDir/run.sh"
       #Copy assests
-      rsync --recursive --inplace --executability --progress --exclude run.sh "$jobDir" "$REMOTE_HOST":remotebashing/
+      rsync --recursive --inplace --executability --progress --exclude run.sh "$jobDir" "$REMOTE_HOST":"$REMOTE_BASEPATH"/
       #Copy run script
-      rsync --recursive --inplace --executability --progress "$jobDir" "$REMOTE_HOST":remotebashing/
+      rsync --recursive --inplace --executability --progress "$jobDir" "$REMOTE_HOST":"$REMOTE_BASEPATH"/
     fi
 done
 
 if [ "$mayNeedToUploadRunner" = true ]; then
-  rsync --inplace --executability --progress "runNext.sh" "$REMOTE_HOST":remotebashing/
+  rsync --inplace --executability --progress "runNext.sh" "$REMOTE_HOST":"$REMOTE_BASEPATH"/
 fi
 
 echo "-- Downloading results"
-rsync --append --size-only --recursive --progress --exclude run.sh --exclude runNext.pid "$REMOTE_HOST":remotebashing/ .
+rsync --append --size-only --recursive --progress --exclude run.sh --exclude runNext.pid "$REMOTE_HOST":"$REMOTE_BASEPATH"/ .
 
 echo "-- Forking execution"
-ssh "$REMOTE_HOST" '/usr/bin/screen -d -m remotebashing/runNext.sh'
+ssh "$REMOTE_HOST" "/usr/bin/screen -d -m $REMOTE_BASEPATH/runNext.sh"
