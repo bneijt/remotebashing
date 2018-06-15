@@ -18,7 +18,7 @@ Remotebashing is a simple 2 scripts approach to executing remote jobs using `ssh
 Installation
 ------------
 - You need `rsync`, `ssh`, `screen` and `bash`. `screen` is only used on the remote.
-- Edit `sync.sh` and put the remote host in there.
+- Edit `sync.sh` and update the required configuration parameters there.
 
 Usage
 -----
